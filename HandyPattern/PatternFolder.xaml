@@ -1,0 +1,48 @@
+﻿<UserControl x:Class="HandyPattern.PatternFolder"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:HandyPattern"
+             xmlns:tools="clr-namespace:HandyPattern.Tools"
+             xmlns:dd="urn:gong-wpf-dragdrop"
+             mc:Ignorable="d"
+             d:DesignWidth="{Binding Source = {x:Static SystemParameters.PrimaryScreenWidth}, Converter = {tools:RatioConverter} , ConverterParameter = '0.18'}" Loaded="UserControl_Loaded"
+    >
+    <Border BorderBrush="#FF696956" CornerRadius="1" BorderThickness="1" x:Name="TextGrid" Margin="1,1,1,1">
+        <Grid >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height ="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <TextBlock dd:DragDrop.IsDragSource="True" FontSize="12" FontWeight="DemiBold" Focusable="False" Cursor="Arrow" Background="Beige" x:Name="folderNamePreview" MouseLeftButtonUp="folderNamePreview_MouseLeftButtonUp"/>
+            </Grid>
+            <Grid Grid.Row="1" x:Name="content"  Visibility="Collapsed" Background="Tan" Margin="0,0,0,1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel x:Name="contentStackPanel" Grid.Column="1" dd:DragDrop.IsDropTarget="True" dd:DragDrop.DropHandler="{Binding}">
+                   
+                </StackPanel>
+            </Grid>
+            <Grid MouseEnter="ShowControls" MouseLeave="HideControls">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="1" Background="#00242420" >
+                    <StackPanel Visibility="Hidden" Orientation="Horizontal" x:Name="FolderControls">
+                        <Button Content="Add folder" Margin="1,5,1,5" Name="CreateFolder" ClickMode="Release" Click="CreateFolderButtonClicked"/>
+                        <Button Content="Add pattern" Margin="1,5,1,5" Name="CreatePattern" ClickMode="Release" Click="CreatePatternButtonClicked"/>
+                        <Button Content="Edit" Margin="1,5,1,5"  x:Name="EditFolderButton"/>
+                        <Button Content="X" Margin="1,5,1,5" x:Name="DeleteFolderButton" Click="DeleteFolderButtonClicked"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+
+        </Grid>
+    </Border>
+</UserControl>
