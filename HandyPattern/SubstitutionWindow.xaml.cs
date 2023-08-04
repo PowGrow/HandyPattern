@@ -33,9 +33,12 @@ namespace HandyPattern
                 Label substitutionLabel = new Label();
                 substitutionLabel.Name = $"substitutionLabel{index}";
                 substitutionLabel.Content = substitutionList[index].Name;
+                substitutionLabel.HorizontalAlignment = HorizontalAlignment.Center;
 
                 TextBox substitutionText = new TextBox();
                 substitutionText.Name = $"substitutionText{index}";
+                substitutionText.HorizontalAlignment = HorizontalAlignment.Stretch;
+                substitutionText.Margin = new Thickness(0,1,25,1);
 
                 SetPositionInGrid(substitutionLabel, NAME_COLUMN_ID);
                 SetPositionInGrid(substitutionText, VALUE_COLUMN_ID);

@@ -1,5 +1,4 @@
-﻿using GongSolutions.Wpf.DragDrop;
-using HandyPattern.Models;
+﻿using HandyPattern.Models;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Windows;
@@ -10,7 +9,7 @@ using System.Windows.Media;
 namespace HandyPattern
 {
     [JsonObject(MemberSerialization.OptIn)]
-    public partial class PatternFolder : UserControl,IElement,IDropTarget
+    public partial class PatternFolder : UserControl,IFolder
     {
         private IWindowFactory _windowFactory;
 
@@ -18,14 +17,6 @@ namespace HandyPattern
         public string Title { get; private set; }
         [JsonProperty]
         public List<IElement> ContentTree { get; private set; }
-        [JsonProperty]
-        public bool IsFolder { get; private set; }
-        [JsonProperty]
-        public UIElement parentElement { get; private set; }
-
-        public string? FlowDocumentXAML { get; private set; }
-
-        public bool IsSubstitutionPattern { get; private set; }
 
         public PatternFolder(string title,List<IElement> content)
         {
@@ -33,8 +24,6 @@ namespace HandyPattern
             Title = title;
             folderNamePreview.Text = title;
             ContentTree = content;
-            IsFolder = true;
-            IsSubstitutionPattern = false;
             var mainWindow = (MainWindow)Application.Current.MainWindow;
             _windowFactory = mainWindow.WindowFactory;
         }
@@ -44,7 +33,6 @@ namespace HandyPattern
             if (content.Visibility == Visibility.Collapsed)
             {
                 content.Visibility = Visibility.Visible;
-                BrushConverter converter = new BrushConverter();
                 folderNamePreview.Background = Brushes.Tan;
                 
             }
@@ -111,43 +99,24 @@ namespace HandyPattern
         private void UpdateChildrenObject(List<IElement> contentTree)
         {
             contentStackPanel.Children.Clear();
-            if (!IsContentNull(contentTree))
+            foreach (IElement element in contentTree)
             {
-                foreach (IElement element in contentTree)
+                if (!contentStackPanel.Children.Contains((UIElement)element))
                 {
-                    _ = element.IsFolder switch
+                    _ = element switch
                     {
-                        true => contentStackPanel.Children.Add((PatternFolder)element),
-                        false => contentStackPanel.Children.Add((Pattern)element),
+                        IFolder => contentStackPanel.Children.Add((PatternFolder)element),
+                        IPattern => contentStackPanel.Children.Add((Pattern)element),
+                        _ => throw new System.NotImplementedException(),
                     };
                 }
             }
-        }
-
-        private bool IsContentNull(List<IElement> content)
-        {
-            if (ContentTree == null)
-            {
-                ContentTree = new List<IElement>();
-                return true;
-            }
-            return false;
         }
 
         private void folderNamePreview_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if ((UIElement)Mouse.DirectlyOver == this.folderNamePreview)
                 Open();
-        }
-
-        void IDropTarget.DragOver(IDropInfo dropInfo)
-        {
-            
-        }
-
-        void IDropTarget.Drop(IDropInfo dropInfo)
-        {
-            IElement? element = dropInfo as IElement;
         }
     }
 }

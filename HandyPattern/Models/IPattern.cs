@@ -1,10 +1,8 @@
-﻿using System.Windows.Documents;
-
-namespace HandyPattern.Models
+﻿namespace HandyPattern.Models
 {
-    public interface IPattern : ITitle, IOpenable, IControlable
+    public interface IPattern : IElement
     {
-        public string? FlowDocumentXAML { get; }
+        public string FlowDocumentXAML { get; }
 
         public bool IsSubstitutionPattern { get;}
     }

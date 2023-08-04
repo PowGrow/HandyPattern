@@ -65,9 +65,9 @@ namespace HandyPattern
             int index = 0;
             foreach (IElement element in contentViewChildren)
             {
-                if(element.IsFolder)
+                if(element is IFolder)
                     elementData.Add((PatternFolder)element);
-                else
+                if(element is IPattern)
                     elementData.Add((Pattern)element);
                 index++;
             }

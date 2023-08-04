@@ -1,5 +1,4 @@
-﻿using GongSolutions.Wpf.DragDrop;
-using HandyPattern.Models;
+﻿using HandyPattern.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -15,10 +14,8 @@ using System.Windows.Input;
 namespace HandyPattern
 {
     [JsonObject(MemberSerialization.OptIn)]
-    public partial class Pattern : UserControl, IElement, IDropTarget
+    public partial class Pattern : UserControl, IPattern
     {
-        
-        private const int TEXT_PREVIEW_SYMBOLS = 200;
         private const string SUBSTITUTION_PATTERN = @"\{\w+?\}";
         private Action substitutionWorkDelegate;
         private bool IsBlocked = false;
@@ -30,11 +27,7 @@ namespace HandyPattern
         public string FlowDocumentXAML { get; set; }
         [JsonProperty]
         public bool IsSubstitutionPattern { get; private set; }
-        [JsonProperty]
-        public UIElement parentElement { get; private set; }
-        public bool IsFolder { get; private set; }
-        public List<IElement>? ContentTree { get; private set; }
-        public List<Substitution>? PatternSubstitutions { get; private set; }
+        public List<Substitution> PatternSubstitutions { get; private set; }
         public FlowDocument FlowDocument
         {
             get { return Data.ConvertXmalString(FlowDocumentXAML); }
@@ -45,8 +38,8 @@ namespace HandyPattern
         {
             InitializeComponent();
             var mainWindow = (MainWindow)Application.Current.MainWindow;
+            PatternSubstitutions = new List<Substitution>();
             _windowFactory = mainWindow.WindowFactory;
-            IsFolder = false;
             IsSubstitutionPattern = isSubstitutionPattern;
             FlowDocumentXAML = flowDocumentXAML;
             Title = title;
@@ -54,49 +47,18 @@ namespace HandyPattern
             if (IsSubstitutionPattern) SearchForSubstitution();
             UpdatePatternName();
         }
-
         public void SetName(string patternName)
         {
             this.Title = patternName;
         }
-
-
-        public void UpdatePatternPreview()
-        {
-            try
-            { 
-                if(FlowDocumentXAML != null)
-                {
-                    var flowDocument = FlowDocument;
-                    var textRange = new TextRange(flowDocument.ContentStart, flowDocument.ContentEnd);
-                    textRange.Select(flowDocument.ContentStart, flowDocument.ContentEnd);
-                    if(textRange.Text.Length > TEXT_PREVIEW_SYMBOLS)
-                        textRange.Select(flowDocument.ContentStart, flowDocument.ContentStart.GetPositionAtOffset(TEXT_PREVIEW_SYMBOLS));
-                    //patternNamePreview.Document.Blocks.Clear();
-                    //this.patternNamePreview.Document.Blocks.Add(new Paragraph(new Run(textRange.Text + ".....")));
-                }
-            }
-            catch(ArgumentNullException)
-            {
-                //patternNamePreview.Document.Blocks.Clear();
-            }
-        }
-
         public void UpdatePatternName()
         {
             patternNamePreview.Text = Title;
         }
-
-        private void ShowEditButton(object sender, MouseEventArgs e)
-        {
-            ShowControls();
-        }
-
         private void EditButtonClicked(object sender, RoutedEventArgs e)
         {
             Open();
         }
-
         public void Open()
         {
             if (!IsBlocked)
@@ -105,7 +67,6 @@ namespace HandyPattern
                 _windowFactory.CreateEditWindow(FlowDocument, Title, this);
             }
         }
-
         public async void EditWindowClosed()
         {
             await SearchForSubstitutionAsync();
@@ -116,12 +77,10 @@ namespace HandyPattern
         {
             PatternControls.Visibility = Visibility.Visible;
         }
-
         public void HideControls()
         {
             PatternControls.Visibility = Visibility.Hidden;
         }
-
         private void MouseRightButtonUpClicked(object sender, MouseButtonEventArgs e)
         {
             if(IsSubstitutionPattern && PatternSubstitutions != null)
@@ -132,62 +91,48 @@ namespace HandyPattern
             else
             {
                 FlowDocument flowDocument = FlowDocument;
-                var textRange = new TextRange(flowDocument.ContentStart, flowDocument.ContentEnd);
-                Clipboard.SetText(textRange.Text, TextDataFormat.UnicodeText);
+                var documentText = new TextRange(flowDocument.ContentStart, flowDocument.ContentEnd).Text;
+                Clipboard.SetText(documentText, TextDataFormat.UnicodeText);
             }
         }
-
         private void SubstitutionWindowClosed()
         {
-            string resultText = GetResultPatternText(FlowDocument);
-            Clipboard.SetText(resultText.ToString());
+            string clipboardText = GetResultPatternText(FlowDocument);
+            Clipboard.SetText(clipboardText.ToString());
             _windowFactory.OnSubstitutionWindowClosed -= SubstitutionWindowClosed;
         }
-
         private string GetResultPatternText(FlowDocument document)
         {
-            try
+            var patternTextRange = new TextRange(document.ContentStart, document.ContentEnd);
+            string[] splitedPatternText = Regex.Split(patternTextRange.Text, SUBSTITUTION_PATTERN);
+            StringBuilder resultText = new StringBuilder();
+            for (int i = 0; i < splitedPatternText.Length - 1; i++)
             {
-                var patternTextRange = new TextRange(document.ContentStart, document.ContentEnd);
-                string[] splitedPatternText = Regex.Split(patternTextRange.Text, SUBSTITUTION_PATTERN);
-                StringBuilder resultText = new StringBuilder();
-                for (int i = 0; i < splitedPatternText.Length - 1; i++)
-                {
-                    resultText.Append(splitedPatternText[i]);
-                    if (PatternSubstitutions[i].Value != null)
-                        resultText.Append(PatternSubstitutions[i].Value);
-                    else
-                        resultText.Append(PatternSubstitutions[i].Name);
-                }
-                return resultText.ToString();
+                resultText.Append(splitedPatternText[i]);
+                if (PatternSubstitutions[i].Value != null)
+                    resultText.Append(PatternSubstitutions[i].Value);
+                else
+                    resultText.Append(PatternSubstitutions[i].Name);
             }
-            catch(NullReferenceException)
-            {
-                return "";
-            } 
+            return resultText.ToString();
         }
-
         private void ShowControls(object sender, MouseEventArgs e)
         {
             ShowControls();
         }
-
         private void HideControls(object sender, MouseEventArgs e)
         {
             HideControls();
         }
-
         private void DeletePatternButtonClicked(object sender, RoutedEventArgs e)
         {
             var stackPanel = (StackPanel)this.Parent;
             stackPanel.Children.Remove(this);
         }
-
         private async Task SearchForSubstitutionAsync()
         {
             await Task.Run(substitutionWorkDelegate);
         }
-
         private void SearchForSubstitution()
         {
             PatternSubstitutions = new List<Substitution>();
@@ -206,17 +151,6 @@ namespace HandyPattern
                 }
             }
             IsBlocked = false;
-        }
-
-        void IDropTarget.DragOver(IDropInfo dropInfo)
-        {
-            dropInfo.Effects = DragDropEffects.Move;
-            dropInfo.DropTargetAdorner = DropTargetAdorners.Insert;
-        }
-
-        void IDropTarget.Drop(IDropInfo dropInfo)
-        {
-            //WIP
         }
     }
 }

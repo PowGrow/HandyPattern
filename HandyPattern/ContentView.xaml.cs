@@ -5,47 +5,19 @@ using System.Windows.Controls;
 
 namespace HandyPattern
 {
-    public partial class ContentView : UserControl,IDragSource
+    public partial class ContentView : UserControl
     {
+        public UIElementCollection Children
+        {
+            get
+            {
+                return contentStackPanel.Children;
+            }
+        }
         
         public ContentView()
         {
             InitializeComponent();
-        }
-
-        public bool CanStartDrag(IDragInfo dragInfo)
-        {
-            return true;
-        }
-
-        public UIElementCollection Children()
-        {
-            return contentStackPanel.Children;
-        }
-
-        public void DragCancelled()
-        {
-            
-        }
-
-        public void DragDropOperationFinished(DragDropEffects operationResult, IDragInfo dragInfo)
-        {
-            
-        }
-
-        public void Dropped(IDropInfo dropInfo)
-        {
-            
-        }
-
-        public void StartDrag(IDragInfo dragInfo)
-        {
-            
-        }
-
-        public bool TryCatchOccurredException(Exception exception)
-        {
-            return false;
         }
     }
 }

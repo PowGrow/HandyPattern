@@ -2,8 +2,8 @@
 
 namespace HandyPattern.Models
 {
-    public interface IFolder: ITitle,IOpenable,IControlable
+    public interface IFolder: IElement
     {
-        public List<ITitle> Content { get; }
+        public List<IElement> ContentTree { get; }
     }
 }
